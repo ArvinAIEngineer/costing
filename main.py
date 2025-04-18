@@ -9,9 +9,9 @@ st.divider()
 # ------------------------------
 # 📨 TWILIO (WhatsApp)
 # ------------------------------
-st.subheader("Whatsapp Configuration")
+st.subheader("WhatsApp Configuration")
 whatsapp_msgs = st.slider("Number of WhatsApp Messages (per month)", 0, 500_000, 10_000, step=1_000)
-whatsapp_cost = whatsapp_msgs * 0.005  # $0.005 per message
+whatsapp_cost = whatsapp_msgs * 0.005  # $0.005 per message (Twilio fee)
 st.write(f"**WhatsApp Cost (Twilio):** ${whatsapp_cost:,.2f}")
 
 st.divider()
@@ -33,9 +33,18 @@ st.divider()
 # 🧠 GEMINI (LLM)
 # ------------------------------
 st.subheader("Gemini LLM Configuration")
-tokens_million = st.slider("Gemini LLM Tokens (in millions)", 0, 100, 1)
-gemini_cost = tokens_million * 125  # $125 per million tokens
-st.write(f"**Gemini Cost:** ${gemini_cost:,.2f}")
+model_choice = st.selectbox("Select Gemini Model", ["Flash", "Flash-Lite"])
+tokens_million = st.slider("Tokens (in millions)", 0, 100, 1)
+
+if model_choice == "Flash":
+    gemini_input_cost = tokens_million * 0.10
+    gemini_output_cost = tokens_million * 0.40
+elif model_choice == "Flash-Lite":
+    gemini_input_cost = tokens_million * 0.075
+    gemini_output_cost = tokens_million * 0.30
+
+gemini_cost = gemini_input_cost + gemini_output_cost
+st.write(f"**Gemini Cost ({model_choice}):** ${gemini_cost:,.2f}")
 
 st.divider()
 
@@ -46,8 +55,13 @@ st.subheader("Email API Configuration")
 emails_sent = st.slider("Emails Sent per Month", 0, 500_000, 10_000, step=1_000)
 free_emails = 3_000
 extra_emails = max(0, emails_sent - free_emails)
-sendgrid_cost = extra_emails * 0.001  # $0.001/email
-st.write(f"**SendGrid Cost:** ${sendgrid_cost:,.2f}")
+sendgrid_cost = extra_emails * 0.001  # $0.001/email after 3,000 free
+tier_cost = 0
+if emails_sent > 50_000:
+    tier_cost = 89.95
+elif emails_sent > 3_000:
+    tier_cost = 19.95
+st.write(f"**SendGrid Cost (incl. Tier):** ${(sendgrid_cost + tier_cost):,.2f}")
 
 st.divider()
 
@@ -68,5 +82,5 @@ st.divider()
 # ------------------------------
 # 💰 TOTAL MONTHLY COST
 # ------------------------------
-total_cost = whatsapp_cost + supabase_total + gemini_cost + sendgrid_cost + render_cost
+total_cost = whatsapp_cost + supabase_total + gemini_cost + sendgrid_cost + tier_cost + render_cost
 st.subheader(f"💰 Total Estimated Monthly Cost: ${total_cost:,.2f}")
